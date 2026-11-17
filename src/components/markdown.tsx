@@ -1,6 +1,6 @@
-import { Fragment, useId, useMemo, useState, type ReactNode } from "react";
-import { ChevronDown, ListTree } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Fragment, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { Check, ChevronDown, Copy, ListTree } from "lucide-react";
+import { cn, copyText } from "@/lib/utils";
 import { useLightbox, type LightboxImage } from "./lightbox";
 
 /**
@@ -273,6 +273,42 @@ function isBlockStart(lines: string[], index: number): boolean {
   return false;
 }
 
+/** 代码块：右上角提供一键复制，复制成功后短暂显示「已复制」 */
+function CodeBlock({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  async function copy() {
+    if (!(await copyText(code))) return;
+    setCopied(true);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={copy}
+        aria-label={copied ? "已复制代码" : "复制代码"}
+        title={copied ? "已复制" : "复制代码"}
+        className={cn(
+          "absolute top-1.5 right-1.5 inline-flex items-center gap-1 rounded-md border bg-card/90 px-1.5 py-1 text-[11px] text-muted-foreground shadow-sm backdrop-blur transition-colors hover:bg-card hover:text-foreground print:hidden",
+          copied && "text-primary",
+        )}
+      >
+        {copied ? <Check className="size-3.5" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
+        <span>{copied ? "已复制" : "复制"}</span>
+      </button>
+      <pre className="overflow-x-auto rounded-lg border bg-muted/70 p-3 pr-20 font-mono text-xs leading-relaxed">
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+}
+
 function parseBlocks(source: string, images: LightboxImage[] = [], headingIds?: string[]): ReactNode[] {
   const lines = source.replace(/\r\n?/g, "\n").split("\n");
   const blocks: ReactNode[] = [];
@@ -296,11 +332,7 @@ function parseBlocks(source: string, images: LightboxImage[] = [], headingIds?: 
         i++;
       }
       if (i < lines.length) i++;
-      blocks.push(
-        <pre key={`b${key++}`} className="overflow-x-auto rounded-lg border bg-muted/70 p-3 font-mono text-xs leading-relaxed">
-          <code>{code.join("\n")}</code>
-        </pre>,
-      );
+      blocks.push(<CodeBlock key={`b${key++}`} code={code.join("\n")} />);
       continue;
     }
 

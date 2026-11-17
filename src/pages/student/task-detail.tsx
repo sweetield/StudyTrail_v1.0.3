@@ -5,6 +5,7 @@ import { AlarmClock, ArrowLeft, Check, CheckCircle2, ExternalLink, MessageSquare
 import { api } from "@/lib/api";
 import type { FileMeta, Progress, ProgressEvent, Step, StudyLog } from "@/lib/types";
 import { ProgressTimeline } from "@/components/progress-timeline";
+import { ReadingModeButton, useReadingMode } from "@/components/app-shell";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { statusMeta } from "@/lib/status";
 import { cn, dueInfo, formatLogMinutes, formatTime, splitTags } from "@/lib/utils";
@@ -74,6 +75,8 @@ export default function StudentTaskDetail() {
   const [loadingLogs, setLoadingLogs] = useState(false);
   const logsTopRef = useRef<HTMLDivElement | null>(null);
   const shouldScrollLogsRef = useRef(false);
+  const reading = useReadingMode();
+  const focus = reading?.focus ?? false;
   useDocumentTitle(data?.task.title);
 
   // 日志倒序返回：第一页 10 条，更早的点“加载更多”再取
@@ -222,9 +225,12 @@ export default function StudentTaskDetail() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <Link to="/app/tasks" className="flex items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> 我的任务
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link to="/app/tasks" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="size-4" /> 我的任务
+          </Link>
+          <ReadingModeButton />
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone={meta.tone}>{meta.label}</Badge>
           {!!task.pinned && (
@@ -294,13 +300,13 @@ export default function StudentTaskDetail() {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="contents lg:col-span-2 lg:flex lg:flex-col lg:gap-6">
+      <div className={cn("grid gap-6", focus ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_20rem]")}>
+        <div className="flex min-w-0 flex-col gap-6">
           {(task.description || extraTaskFiles.length > 0) && (
             <Card>
               <CardHeader title="任务说明" />
-              {task.description && <Markdown source={task.description} className="px-5 py-4" toc />}
-              {extraTaskFiles.length > 0 && <FileChips files={extraTaskFiles} className="px-5 pb-4" />}
+              {task.description && <Markdown source={task.description} className="reading-body px-5 py-4 lg:px-6 lg:py-5" toc />}
+              {extraTaskFiles.length > 0 && <FileChips files={extraTaskFiles} className="px-5 pb-4 lg:px-6" />}
             </Card>
           )}
 
@@ -394,7 +400,7 @@ export default function StudentTaskDetail() {
                         <p className="mt-0.5 tabular-nums">{formatLogMinutes(l.minutes)}</p>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <Markdown source={l.content} />
+                        <Markdown source={l.content} className="reading-body" />
                         {filesNotReferenced(l.files, l.content).length > 0 && (
                           <FileChips files={filesNotReferenced(l.files, l.content)} className="mt-2" />
                         )}
@@ -429,7 +435,7 @@ export default function StudentTaskDetail() {
           </Card>
         </div>
 
-        <aside className="flex flex-col gap-6 lg:sticky lg:top-8 lg:self-start">
+        <aside className={cn("flex min-w-0 flex-col gap-6 lg:sticky lg:top-8 lg:self-start", focus && "hidden")}>
           <Card>
             <div className="flex flex-col gap-3 border-b p-5">
               <div className="flex items-baseline justify-between">

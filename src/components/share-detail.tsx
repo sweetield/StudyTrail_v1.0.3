@@ -9,6 +9,7 @@ import { Badge, Card, CardHeader, EmptyState, TechTag } from "./ui";
 import { FileChips, filesNotReferenced } from "./attachments";
 import { Avatar } from "./avatar";
 import { Markdown } from "./markdown";
+import { ReadingModeButton } from "./app-shell";
 
 /** 辅导员与学员共用的资料阅读视图，保证分享链接中的排版与站内一致 */
 export function ShareDetailView({
@@ -28,11 +29,14 @@ export function ShareDetailView({
   const tags = splitTags(share.tech_tags);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-[56rem] flex-col gap-6 xl:max-w-[64rem] 2xl:max-w-[70rem]">
       <div className="flex flex-col gap-3">
-        <Link to={backTo} className="flex items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> {backLabel}
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link to={backTo} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="size-4" /> {backLabel}
+          </Link>
+          <ReadingModeButton />
+        </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
@@ -74,46 +78,44 @@ export function ShareDetailView({
               </div>
             )}
           </div>
-          {action && <div className="flex shrink-0 flex-wrap gap-2">{action}</div>}
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {action}
+          </div>
         </div>
       </div>
 
-      {/* 正文占据主要宽度，资料信息收窄为辅助栏，长文阅读更舒适 */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_13rem] xl:grid-cols-[minmax(0,1fr)_16rem] 2xl:grid-cols-[minmax(0,1fr)_18rem]">
-        <Card>
-          <CardHeader title="资料内容" />
-          {share.description.trim() || extraFiles.length > 0 ? (
-            <>
-              {share.description.trim() && <Markdown source={share.description} className="px-5 py-4 leading-6 lg:px-6 lg:py-5" toc />}
-              {extraFiles.length > 0 && <FileChips files={extraFiles} className="px-5 pb-4 lg:px-6" />}
-            </>
-          ) : (
-            <EmptyState title="这份资料暂时没有正文" description="请查看右侧附件，或联系辅导员补充内容" />
-          )}
-        </Card>
+      {/* 正文独占一列，元信息折叠到底部，长文阅读不再被侧栏挤压 */}
+      <Card>
+        <CardHeader title="资料内容" />
+        {share.description.trim() || extraFiles.length > 0 ? (
+          <>
+            {share.description.trim() && <Markdown source={share.description} className="reading-body px-5 py-5 lg:px-8" toc />}
+            {extraFiles.length > 0 && <FileChips files={extraFiles} className="px-5 pb-5 lg:px-8" />}
+          </>
+        ) : (
+          <EmptyState title="这份资料暂时没有正文" description="请查看下方附件，或联系辅导员补充内容" />
+        )}
+      </Card>
 
-        <Card className="h-fit lg:sticky lg:top-8">
-          <CardHeader title="资料信息" />
-          <dl className="flex flex-col divide-y text-sm">
-            <InfoRow label="发布人">{share.creator_name ?? "辅导员"}</InfoRow>
-            <InfoRow label="发布时间">{formatTime(share.created_at)}</InfoRow>
-            <InfoRow label="最近更新">{formatTime(share.updated_at)}</InfoRow>
-            <InfoRow label="可见范围">{share.class_names || "全部学员"}</InfoRow>
-            <InfoRow label="访问量">{share.view_count} 次</InfoRow>
-            <InfoRow label="附件数">{files.length} 个</InfoRow>
-          </dl>
-          <p className="border-t px-4 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
-            访问量按登录学员首次打开统计，同一学员重复查看不重复累加。
-          </p>
-        </Card>
-      </div>
+      <details className="rounded-xl border bg-card px-5 py-4 text-sm">
+        <summary className="cursor-pointer font-medium">资料信息</summary>
+        <dl className="mt-3 grid gap-x-8 gap-y-2 sm:grid-cols-2">
+          <InfoRow label="发布人">{share.creator_name ?? "辅导员"}</InfoRow>
+          <InfoRow label="发布时间">{formatTime(share.created_at)}</InfoRow>
+          <InfoRow label="最近更新">{formatTime(share.updated_at)}</InfoRow>
+          <InfoRow label="可见范围">{share.class_names || "全部学员"}</InfoRow>
+          <InfoRow label="访问量">{share.view_count} 次</InfoRow>
+          <InfoRow label="附件数">{files.length} 个</InfoRow>
+        </dl>
+        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">访问量按登录学员首次打开统计，同一学员重复查看不重复累加。</p>
+      </details>
     </div>
   );
 }
 
 function InfoRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 px-4 py-2">
+    <div className="flex items-center justify-between gap-3 border-b py-1.5 last:border-b-0 sm:border-b-0">
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
       <dd className="min-w-0 truncate text-right">{children}</dd>
     </div>

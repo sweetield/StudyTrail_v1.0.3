@@ -1,12 +1,12 @@
 import { useRef, useState, type DragEvent, type FormEvent, type KeyboardEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import useSWR, { mutate } from "swr";
-import { ArrowDown, ArrowLeft, ArrowUp, Eye, GripVertical, PenLine, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, Eye, GripVertical, Maximize2, Minimize2, PenLine, Plus, Trash2, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { caretFromPoint } from "@/lib/caret";
 import type { AudienceMode, AudienceStudent, ClassItem, FileMeta, Step } from "@/lib/types";
 import { PRIORITY_OPTIONS } from "@/lib/status";
-import { splitTags } from "@/lib/utils";
+import { cn, splitTags } from "@/lib/utils";
 import { useToast } from "@/components/toast";
 import { AudiencePicker, type AudienceValue } from "@/components/audience-picker";
 import { FileUploader, MAX_ATTACHMENTS, buildAttachmentInsertion, stripFileMarkdown, uploadAttachmentFiles } from "@/components/attachments";
@@ -65,6 +65,7 @@ function Editor({ initial }: { initial?: TaskDetail }) {
   const [files, setFiles] = useState<FileMeta[]>(initial?.task_files ?? []);
   const [description, setDescription] = useState(initial?.task.description ?? "");
   const [preview, setPreview] = useState(false);
+  const [wideEdit, setWideEdit] = useState(false);
   const descriptionValueRef = useRef(description);
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
   const descriptionTouchedRef = useRef(false);
@@ -272,8 +273,8 @@ function Editor({ initial }: { initial?: TaskDetail }) {
         </p>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-span-2">
+      <div className={cn("grid gap-6", wideEdit ? "grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_20rem]")}>
+        <div className="flex min-w-0 flex-col gap-6">
           <Card>
             <CardHeader title="基本信息" />
             <div className="flex flex-col gap-4 p-5">
@@ -328,20 +329,30 @@ function Editor({ initial }: { initial?: TaskDetail }) {
                       <Button type="button" size="sm" variant={preview ? "secondary" : "ghost"} onClick={() => setPreview(true)}>
                         <Eye /> 预览
                       </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setWideEdit((value) => !value)}
+                        title={wideEdit ? "还原编辑区" : "放大编辑区，隐藏右侧发布设置"}
+                        aria-pressed={wideEdit}
+                      >
+                        {wideEdit ? <Minimize2 /> : <Maximize2 />} {wideEdit ? "还原" : "放大"}
+                      </Button>
                     </div>
                   </div>
                   {preview ? (
-                    <div className="min-h-64 rounded-lg border bg-card px-3 py-2">
-                      {description.trim() ? <Markdown source={description} /> : <p className="text-sm text-muted-foreground">还没有内容</p>}
+                    <div className={cn("rounded-lg border bg-card px-4 py-3", wideEdit ? "min-h-[65vh]" : "min-h-[30rem]")}>
+                      {description.trim() ? <Markdown source={description} className="reading-body" /> : <p className="text-sm text-muted-foreground">还没有内容</p>}
                     </div>
                   ) : (
                     <Textarea
                       id="description"
                       name="description"
                       ref={descriptionRef}
-                      rows={14}
+                      rows={wideEdit ? 24 : 18}
                       maxLength={20000}
-                      className="min-h-64 font-mono text-[13px] leading-relaxed"
+                      className={cn("resize-y font-mono text-sm leading-6", wideEdit ? "min-h-[65vh]" : "min-h-[30rem]")}
                       value={description}
                       onChange={(e) => changeDescription(e.target.value)}
                       onFocus={() => {
@@ -420,7 +431,7 @@ function Editor({ initial }: { initial?: TaskDetail }) {
           </Card>
         </div>
 
-        <Card className="lg:sticky lg:top-8 lg:self-start">
+        <Card className={cn("lg:sticky lg:top-8 lg:self-start", wideEdit && "hidden")}>
           <CardHeader title="发布设置" />
           <div className="flex flex-col gap-4 p-5">
             <AudiencePicker

@@ -87,3 +87,35 @@ export function splitTags(tags?: string | null) {
     .map((tag) => tag.trim())
     .filter(Boolean);
 }
+
+/**
+ * 复制文本到剪贴板：优先使用异步剪贴板 API，失败时回退到临时 textarea，
+ * 兼容非 HTTPS 或浏览器限制剪贴板权限的场景。返回是否复制成功。
+ */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // 继续尝试回退方案
+  }
+  try {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.top = "-9999px";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    try {
+      area.select();
+      return document.execCommand("copy");
+    } finally {
+      area.remove();
+    }
+  } catch {
+    return false;
+  }
+}

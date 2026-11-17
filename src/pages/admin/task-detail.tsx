@@ -19,6 +19,7 @@ import { Avatar } from "@/components/avatar";
 import { ExportDialog } from "@/components/export-dialog";
 import { UrgeDialog } from "@/components/urge-dialog";
 import { TASK_STATUS_LABEL } from "@/lib/status";
+import { ReadingModeButton, useReadingMode } from "@/components/app-shell";
 
 interface RosterRow {
   user_id: number;
@@ -82,6 +83,8 @@ export default function AdminTaskDetail() {
   const [review, setReview] = useState<ReviewTarget | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [urgeOpen, setUrgeOpen] = useState(false);
+  const reading = useReadingMode();
+  const focus = reading?.focus ?? false;
   useDocumentTitle(data?.task.title);
 
   if (!data) return <PageLoader />;
@@ -183,6 +186,7 @@ export default function AdminTaskDetail() {
             </div>
           </div>
           <div className="flex flex-wrap shrink-0 gap-2">
+            <ReadingModeButton />
             {task.status === "published" && (
               <Button variant="outline" onClick={togglePin}>
                 <Pin /> {task.pinned ? "取消置顶" : "置顶"}
@@ -298,12 +302,12 @@ export default function AdminTaskDetail() {
       </Card>
 
       {(task.description || extraTaskFiles.length > 0 || steps.length > 0) && (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className={cn("grid gap-6", focus ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_20rem]")}>
           {(task.description || extraTaskFiles.length > 0) && (
             <Card>
               <CardHeader title="任务说明" />
-              {task.description && <Markdown source={task.description} className="px-5 py-4" toc />}
-              {extraTaskFiles.length > 0 && <FileChips files={extraTaskFiles} className="px-5 pb-4" />}
+              {task.description && <Markdown source={task.description} className="reading-body px-5 py-4 lg:px-6" toc />}
+              {extraTaskFiles.length > 0 && <FileChips files={extraTaskFiles} className="px-5 pb-4 lg:px-6" />}
             </Card>
           )}
           {steps.length > 0 && (

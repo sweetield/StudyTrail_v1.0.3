@@ -32,7 +32,7 @@ export default function SharePage() {
   return (
     <div className="flex min-h-dvh flex-col bg-muted/20">
       <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-4xl items-center justify-between gap-3 px-4">
+        <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-3 px-4">
           <Link to={backTo} aria-label="返回学迹">
             <Logo />
           </Link>
@@ -44,7 +44,7 @@ export default function SharePage() {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
         {error ? (
           <EmptyState
             title="资料不存在或未向你开放"

@@ -67,3 +67,28 @@
     transform: none;
   }
 }
+
+/* 长文正文：中文 15px、行高 1.85，并限制舒适行长 */
+.reading-body {
+  max-width: 52rem;
+  margin-inline: auto;
+  font-size: 0.9375rem;
+  line-height: 1.85;
+}
+
+@media (min-width: 1280px) {
+  .reading-body {
+    max-width: 62rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .reading-body {
+    max-width: 70rem;
+  }
+}
+
+.reading-body p,
+.reading-body li {
+  line-height: 1.85;
+}
